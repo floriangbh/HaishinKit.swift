@@ -330,6 +330,9 @@
 		29FD1B5022FF13190095A0BE /* VTSessionPropertyKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FD1B4F22FF13190095A0BE /* VTSessionPropertyKey.swift */; };
 		29FD1B5122FF13190095A0BE /* VTSessionPropertyKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FD1B4F22FF13190095A0BE /* VTSessionPropertyKey.swift */; };
 		29FD1B5222FF13190095A0BE /* VTSessionPropertyKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FD1B4F22FF13190095A0BE /* VTSessionPropertyKey.swift */; };
+		76FFBF702683C5B700232301 /* LocalStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76FFBF6F2683C5B700232301 /* LocalStream.swift */; };
+		76FFBF712683C5B700232301 /* LocalStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76FFBF6F2683C5B700232301 /* LocalStream.swift */; };
+		76FFBF722683C5B700232301 /* LocalStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76FFBF6F2683C5B700232301 /* LocalStream.swift */; };
 		BC0D236D26331BAB001DDA0C /* NetSocket.CircularBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC0D236C26331BAB001DDA0C /* NetSocket.CircularBuffer.swift */; };
 		BC0D236E26331BAB001DDA0C /* NetSocket.CircularBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC0D236C26331BAB001DDA0C /* NetSocket.CircularBuffer.swift */; };
 		BC0D236F26331BAB001DDA0C /* NetSocket.CircularBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC0D236C26331BAB001DDA0C /* NetSocket.CircularBuffer.swift */; };
@@ -819,6 +822,7 @@
 		29F6F4841DFB83E200920A3A /* RTMPHandshake.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RTMPHandshake.swift; sourceTree = "<group>"; };
 		29F97F232336A4FA00A4C317 /* SettingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingTests.swift; sourceTree = "<group>"; };
 		29FD1B4F22FF13190095A0BE /* VTSessionPropertyKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VTSessionPropertyKey.swift; sourceTree = "<group>"; };
+		76FFBF6F2683C5B700232301 /* LocalStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LocalStream.swift; path = Local/LocalStream.swift; sourceTree = "<group>"; };
 		BC0D236C26331BAB001DDA0C /* NetSocket.CircularBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetSocket.CircularBuffer.swift; sourceTree = "<group>"; };
 		BC20DF2B2503747E007BC608 /* HKPictureInPicureControllerPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HKPictureInPicureControllerPosition.swift; sourceTree = "<group>"; };
 		BC20DF33250374EA007BC608 /* HKPictureInPicureController+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HKPictureInPicureController+Extension.swift"; sourceTree = "<group>"; };
@@ -1123,6 +1127,7 @@
 		2945CBBF1B4BE66000104112 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				76FFBF6E2683C59E00232301 /* Local */,
 				290907CD1C3961AD00F2E80C /* Codec */,
 				29EA87D11E799EFF0043A5F8 /* Extension */,
 				295891081EEB8B1D00CE51E1 /* FLV */,
@@ -1411,6 +1416,14 @@
 				BC83A4722403D83B006BDE06 /* VTCompressionSession+Extension.swift */,
 			);
 			path = Extension;
+			sourceTree = "<group>";
+		};
+		76FFBF6E2683C59E00232301 /* Local */ = {
+			isa = PBXGroup;
+			children = (
+				76FFBF6F2683C5B700232301 /* LocalStream.swift */,
+			);
+			name = Local;
 			sourceTree = "<group>";
 		};
 		BC20DF2A25037454007BC608 /* PiP */ = {
@@ -1937,6 +1950,7 @@
 				BCA97C02263C599D0027213C /* MP4SyncSampleBox.swift in Sources */,
 				299B13271D3B751400A1E8F5 /* HKView.swift in Sources */,
 				BC44A1A923D31E92002D4297 /* AudioCodec.AudioBuffer.swift in Sources */,
+				76FFBF702683C5B700232301 /* LocalStream.swift in Sources */,
 				BC20DF38250377A3007BC608 /* ScreenCaptureSession.swift in Sources */,
 				29B876AF1CD70B2800FC07DA /* RTMPChunk.swift in Sources */,
 				29D3D4CF1ED04C4C00DD4AA6 /* VideoIOComponent+Extension.swift in Sources */,
@@ -2136,6 +2150,7 @@
 				BCA97C01263C599C0027213C /* MP4SyncSampleBox.swift in Sources */,
 				29B876F81CD70D5900FC07DA /* HTTPService.swift in Sources */,
 				29B876F91CD70D5900FC07DA /* HTTPStream.swift in Sources */,
+				76FFBF712683C5B700232301 /* LocalStream.swift in Sources */,
 				296543631D62FE9000734698 /* HKView-macOS.swift in Sources */,
 				29B876FA1CD70D5900FC07DA /* M3U.swift in Sources */,
 				292D8A341D8B294900DBECE2 /* MP4Reader.swift in Sources */,
@@ -2323,6 +2338,7 @@
 				BC44A1AB23D31E92002D4297 /* AudioCodec.AudioBuffer.swift in Sources */,
 				BCC1A7092647E89300661156 /* BaseDescriptor.swift in Sources */,
 				29EB3E261ED05A07001CAE8B /* RTMPStream.swift in Sources */,
+				76FFBF722683C5B700232301 /* LocalStream.swift in Sources */,
 				BCA97BE2263C095B0027213C /* MP4TimeToSampleBox.swift in Sources */,
 				29DF20642312A3DD004057C3 /* RTMPNWSocket.swift in Sources */,
 				29EB3E111ED05881001CAE8B /* IOComponent.swift in Sources */,
