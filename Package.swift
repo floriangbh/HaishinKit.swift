@@ -33,7 +33,8 @@ let package = Package(
                     "RTMP",
                     "Util",
                     "Platforms",
-                    "TS"
+                    "TS",
+                    "Local"
                 ])
     ]
 )
