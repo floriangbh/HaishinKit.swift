@@ -17,7 +17,7 @@ final class IngestViewController: UIViewController {
     @IBOutlet private weak var effectSegmentControl: UISegmentedControl!
     @IBOutlet private weak var audioDevicePicker: UIPickerView!
     @IBOutlet private weak var audioMonoStereoSegmentCOntrol: UISegmentedControl!
-
+    
     @ScreenActor
     private var currentEffect: (any VideoEffect)?
     private var currentPosition: AVCaptureDevice.Position = .back
@@ -32,61 +32,81 @@ final class IngestViewController: UIViewController {
     }()
     @ScreenActor
     private var videoScreenObject = VideoTrackScreenObject()
-
+    
+    @ScreenActor
+    private var imageScreenObject = ImageScreenObject()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         Task {
             // If you want to use the multi-camera feature, please make sure stream.isMultiCamSessionEnabled = true. Before attachCamera or attachAudio.
             // mixer.isMultiCamSessionEnabled = true
-            if let orientation = DeviceUtil.videoOrientation(by: UIApplication.shared.statusBarOrientation) {
-                await mixer.setVideoOrientation(orientation)
-            }
-            await mixer.setMonitoringEnabled(DeviceUtil.isHeadphoneConnected())
+            //            if let orientation = DeviceUtil.videoOrientation(by: UIApplication.shared.statusBarOrientation) {
+            //                await mixer.setVideoOrientation(orientation)
+            //            }
+
             var videoMixerSettings = await mixer.videoMixerSettings
             videoMixerSettings.mode = .offscreen
             await mixer.setVideoMixerSettings(videoMixerSettings)
+            await mixer.setFrameRate(60)
+            await mixer.setSessionPreset(AVCaptureSession.Preset.hd1920x1080)
+            await mixer.setVideoOrientation(.landscapeRight)
             await netStreamSwitcher.setPreference(Preference.default)
             if let stream = await netStreamSwitcher.stream {
                 await mixer.addOutput(stream)
                 if let view = view as? (any HKStreamOutput) {
                     await stream.addOutput(view)
                 }
+                
+                let videoSettings = VideoCodecSettings(
+                    videoSize: .init(width: 1920, height: 1080),
+                    bitRate: 1920 * 1080,
+                    profileLevel: kVTProfileLevel_H264_Baseline_AutoLevel as String
+                )
+                
+                await stream.setVideoSettings(videoSettings)
             }
         }
-
+        
         Task { @ScreenActor in
-            videoScreenObject.cornerRadius = 16.0
-            videoScreenObject.track = 1
-            videoScreenObject.horizontalAlignment = .right
-            videoScreenObject.layoutMargin = .init(top: 16, left: 0, bottom: 0, right: 16)
-            videoScreenObject.size = .init(width: 160 * 2, height: 90 * 2)
-            await mixer.screen.size = .init(width: 720, height: 1280)
+            let imageURL = URL(fileURLWithPath: Bundle.main.path(forResource: "overlay", ofType: "png") ?? "")
+            if let provider = CGDataProvider(url: imageURL as CFURL) {
+                imageScreenObject.cgImage = CGImage(
+                    pngDataProviderSource: provider,
+                    decode: nil,
+                    shouldInterpolate: false,
+                    intent: .defaultIntent
+                )
+            } else {
+                logger.info("no image")
+            }
+            imageScreenObject.size = .init(width: 1920, height: 1080)
+            
+            await mixer.screen.size = .init(width: 1920, height: 1080)
             await mixer.screen.backgroundColor = UIColor.black.cgColor
-            try? await mixer.screen.addChild(videoScreenObject)
+            try? await mixer.screen.addChild(imageScreenObject)
         }
-
+        
         videoBitrateSlider?.value = Float(VideoCodecSettings.default.bitRate) / 1000
         audioBitrateSlider?.value = Float(AudioCodecSettings.default.bitRate) / 1000
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         logger.info("viewWillAppear")
         super.viewWillAppear(animated)
-
+        
         Task {
-            let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentPosition)
-            try? await mixer.attachVideo(back, track: 0)
-            try? await mixer.attachAudio(AVCaptureDevice.default(for: .audio))
-            let front = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
-            try? await mixer.attachVideo(front, track: 1) { videoUnit in
+            let front = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+            try? await mixer.attachVideo(front, track: 0) { videoUnit in
                 videoUnit.isVideoMirrored = true
+                videoUnit.preferredVideoStabilizationMode = .standard
             }
         }
         NotificationCenter.default.addObserver(self, selector: #selector(on(_:)), name: UIDevice.orientationDidChangeNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didInterruptionNotification(_:)), name: AVAudioSession.interruptionNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didRouteChangeNotification(_:)), name: AVAudioSession.routeChangeNotification, object: nil)
     }
-
+    
     override func viewWillDisappear(_ animated: Bool) {
         logger.info("viewWillDisappear")
         super.viewWillDisappear(animated)
@@ -94,59 +114,30 @@ final class IngestViewController: UIViewController {
             await netStreamSwitcher.close()
             try? await mixer.attachAudio(nil)
             try? await mixer.attachVideo(nil, track: 0)
-            try? await mixer.attachVideo(nil, track: 1)
         }
         // swiftlint:disable:next notification_center_detachment
         NotificationCenter.default.removeObserver(self)
     }
 
-    override func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator) {
-        super.viewWillTransition(to: size, with: coordinator)
-        Task { @ScreenActor in
-            if await UIDevice.current.orientation.isLandscape {
-                await mixer.screen.size = .init(width: 1280, height: 720)
-            } else {
-                await mixer.screen.size = .init(width: 720, height: 1280)
-            }
-        }
-    }
-
     @IBAction func rotateCamera(_ sender: UIButton) {
         logger.info("rotateCamera")
-
+        
         Task {
-            if await mixer.isMultiCamSessionEnabled {
-                var videoMixerSettings = await mixer.videoMixerSettings
-                if videoMixerSettings.mainTrack == 0 {
-                    videoMixerSettings.mainTrack = 1
-                    await mixer.setVideoMixerSettings(videoMixerSettings)
-                    Task { @ScreenActor in
-                        videoScreenObject.track = 0
-                    }
-                } else {
-                    videoMixerSettings.mainTrack = 0
-                    await mixer.setVideoMixerSettings(videoMixerSettings)
-                    Task { @ScreenActor in
-                        videoScreenObject.track = 1
-                    }
-                }
-            } else {
-                let position: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
-                try? await mixer.attachVideo(AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position)) { videoUnit in
-                    videoUnit.isVideoMirrored = position == .front
-                }
-                currentPosition = position
+            let position: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
+            try? await mixer.attachVideo(AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position)) { videoUnit in
+                videoUnit.isVideoMirrored = position == .front
             }
+            currentPosition = position
         }
     }
-
+    
     @IBAction func toggleTorch(_ sender: UIButton) {
         Task {
             let isTorchEnabled = await mixer.isTorchEnabled
             await mixer.setTorchEnabled(!isTorchEnabled)
         }
     }
-
+    
     @IBAction func on(slider: UISlider) {
         if slider == audioBitrateSlider {
             Task {
@@ -184,7 +175,7 @@ final class IngestViewController: UIViewController {
             }
         }
     }
-
+    
     @IBAction func on(pause: UIButton) {
         Task {
             if let stream = await netStreamSwitcher.stream as? RTMPStream {
@@ -192,11 +183,11 @@ final class IngestViewController: UIViewController {
             }
         }
     }
-
+    
     @IBAction func on(close: UIButton) {
         self.dismiss(animated: true, completion: nil)
     }
-
+    
     @IBAction func on(publish: UIButton) {
         Task {
             if publish.isSelected {
@@ -211,7 +202,7 @@ final class IngestViewController: UIViewController {
             publish.isSelected.toggle()
         }
     }
-
+    
     func tapScreen(_ gesture: UIGestureRecognizer) {
         if let gestureView = gesture.view, gesture.state == .ended {
             let touchPoint: CGPoint = gesture.location(in: gestureView)
@@ -229,7 +220,7 @@ final class IngestViewController: UIViewController {
             }
         }
     }
-
+    
     private func setEnabledPreferredInputBuiltInMic(_ isEnabled: Bool) {
         let session = AVAudioSession.sharedInstance()
         do {
@@ -246,7 +237,7 @@ final class IngestViewController: UIViewController {
         } catch {
         }
     }
-
+    
     @IBAction private func onFPSValueChanged(_ segment: UISegmentedControl) {
         Task {
             switch segment.selectedSegmentIndex {
@@ -261,7 +252,7 @@ final class IngestViewController: UIViewController {
             }
         }
     }
-
+    
     @IBAction private func onEffectValueChanged(_ segment: UISegmentedControl) {
         Task { @ScreenActor in
             if let currentEffect {
@@ -279,7 +270,7 @@ final class IngestViewController: UIViewController {
             }
         }
     }
-
+    
     @IBAction private func onStereoMonoChanged(_ segment: UISegmentedControl) {
         switch segment.selectedSegmentIndex {
         case 0:
@@ -291,12 +282,12 @@ final class IngestViewController: UIViewController {
             break
         }
     }
-
+    
     @objc
     private func didInterruptionNotification(_ notification: Notification) {
         logger.info(notification)
     }
-
+    
     @objc
     private func didRouteChangeNotification(_ notification: Notification) {
         logger.info(notification)
@@ -318,7 +309,7 @@ final class IngestViewController: UIViewController {
             }
         }
     }
-
+    
     @objc
     private func on(_ notification: Notification) {
         guard let orientation = DeviceUtil.videoOrientation(by: UIApplication.shared.statusBarOrientation) else {
@@ -371,11 +362,11 @@ extension IngestViewController: UIPickerViewDataSource {
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
         return 1
     }
-
+    
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
         return AVAudioSession.sharedInstance().preferredInput?.dataSources?.count ?? 0
     }
-
+    
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return AVAudioSession.sharedInstance().preferredInput?.dataSources?[row].dataSourceName ?? ""
     }
