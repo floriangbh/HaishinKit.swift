@@ -142,6 +142,7 @@
 				iOS/IngestViewController.swift,
 				iOS/Main.storyboard,
 				iOS/MemoryUsage.swift,
+				iOS/overlay.png,
 				iOS/PlaybackContainerViewController.swift,
 				iOS/PlaybackViewController.swift,
 				iOS/PreferenceViewController.swift,
