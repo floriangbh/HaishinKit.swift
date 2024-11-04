@@ -30,8 +30,6 @@ final class IngestViewController: UIViewController {
         audioCapture.delegate = self
         return audioCapture
     }()
-    @ScreenActor
-    private var videoScreenObject = VideoTrackScreenObject()
     
     @ScreenActor
     private var imageScreenObject = ImageScreenObject()
@@ -60,8 +58,8 @@ final class IngestViewController: UIViewController {
                 
                 let videoSettings = VideoCodecSettings(
                     videoSize: .init(width: 1920, height: 1080),
-                    bitRate: 1920 * 1080,
-                    profileLevel: kVTProfileLevel_H264_Baseline_AutoLevel as String
+                    bitRate: 6000 * 1024,
+                    profileLevel: kVTProfileLevel_H264_High_AutoLevel as String
                 )
                 
                 await stream.setVideoSettings(videoSettings)
@@ -83,7 +81,6 @@ final class IngestViewController: UIViewController {
             imageScreenObject.size = .init(width: 1920, height: 1080)
             
             await mixer.screen.size = .init(width: 1920, height: 1080)
-            await mixer.screen.backgroundColor = UIColor.black.cgColor
             try? await mixer.screen.addChild(imageScreenObject)
         }
         
